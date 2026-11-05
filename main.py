@@ -1,6 +1,14 @@
+"""
+PROJETO PIXELCOFFEE - DESK APP II
+Menu interativo totalmente funcional em console.
+"""
+
 from abc import ABC, abstractmethod
 
 
+# ---------------------------------------------------------
+# MODELOS (Herança, Polimorfismo, Composição, Agregação)
+# ---------------------------------------------------------
 class Produto(ABC):
     def __init__(self, id_prod: int, nome: str, preco_base: float):
         self.id_prod = id_prod
@@ -26,8 +34,8 @@ class Bebida(Produto):
         return self.preco_base + adicional
 
     def getInfo(self) -> str:
-        temperatura = "Gelada" if self.gelada else "Quente"
-        return f"[Bebida] {self.nome} ({self.volume_ml}ml, {temperatura}) - R$ {self.calcularPrecoFinal():.2f}"
+        temp = "Gelada" if self.gelada else "Quente"
+        return f"[Bebida] {self.nome} ({self.volume_ml}ml, {temp}) - R$ {self.calcularPrecoFinal():.2f}"
 
 
 class Alimento(Produto):
@@ -39,8 +47,8 @@ class Alimento(Produto):
         return self.preco_base if self.contem_gluten else self.preco_base * 1.10
 
     def getInfo(self) -> str:
-        tag_gluten = "Com Glúten" if self.contem_gluten else "Sem Glúten"
-        return f"[Alimento] {self.nome} ({tag_gluten}) - R$ {self.calcularPrecoFinal():.2f}"
+        gluten = "Com Glúten" if self.contem_gluten else "Sem Glúten"
+        return f"[Alimento] {self.nome} ({gluten}) - R$ {self.calcularPrecoFinal():.2f}"
 
 
 class Cliente:
@@ -83,8 +91,7 @@ class Pedido:
     def adicionarItem(self, produto: Produto, quantidade: int):
         if quantidade <= 0:
             raise ValueError("A quantidade deve ser maior que zero.")
-        item = ItemPedido(produto, quantidade)
-        self.itens.append(item)
+        self.itens.append(ItemPedido(produto, quantidade))
 
     def calcularTotal(self) -> float:
         soma = sum(item.calcularSubtotal() for item in self.itens)
@@ -101,49 +108,148 @@ class Pedido:
         return "\n".join(linhas)
 
     def emitirRecibo(self, impressora: ImpressoraCupom):
-        corpo = self.visualizarResumo()
-        impressora.imprimir(corpo)
+        impressora.imprimir(self.visualizarResumo())
 
 
-def executar_testes():
-    cafe = Bebida(1, "Café Expresso", 6.00, volume_ml=100, gelada=False)
-    iced_latte = Bebida(2, "Iced Latte", 12.00, volume_ml=350, gelada=True)
-    croissant = Alimento(3, "Croissant", 10.00, contem_gluten=True)
-    brownie_fit = Alimento(4, "Brownie Especial", 10.00, contem_gluten=False)
+# ---------------------------------------------------------
+# MENU INTERATIVO TOTALMENTE FUNCIONAL
+# ---------------------------------------------------------
+class PixelCoffeeApp:
+    def __init__(self):
+        # Base de dados em memória
+        self.produtos: list[Produto] = [
+            Bebida(1, "Café Expresso", 6.00, volume_ml=100, gelada=False),
+            Bebida(2, "Iced Latte", 12.00, volume_ml=350, gelada=True),
+            Alimento(3, "Croissant", 10.00, contem_gluten=True),
+            Alimento(4, "Brownie Especial", 10.00, contem_gluten=False)
+        ]
+        self.clientes: list[Cliente] = [
+            Cliente("111.222.333-44", "Kevin Ferreira", desconto_fidelidade=0.10)
+        ]
+        self.pedidos: list[Pedido] = []
+        self.contador_pedidos = 100
+        self.impressora = ImpressoraCupom()
 
-    print(cafe.getInfo())
-    print(iced_latte.getInfo())
-    print(croissant.getInfo())
-    print(brownie_fit.getInfo())
+    def exibir_menu_principal(self):
+        print("\n======================================")
+        print("         PIXELCOFFEE - DESK APP II    ")
+        print("======================================")
+        print("1. Listar Cardápio de Produtos")
+        print("2. Cadastrar Novo Produto")
+        print("3. Listar Clientes Cadastrados")
+        print("4. Cadastrar Novo Cliente")
+        print("5. Criar Novo Pedido")
+        print("6. Listar/Imprimir Pedidos Realizados")
+        print("0. Sair do Sistema")
+        print("--------------------------------------")
 
-    cliente_kevin = Cliente("111.222.333-44", "Kevin Ferreira", desconto_fidelidade=0.10)
-    cliente_joao = Cliente("222.333.444-55", "João Silva", desconto_fidelidade=0.05)
-    cliente_arthur = Cliente("333.444.555-66", "Arthur Sampaio", desconto_fidelidade=0.05)
-    cliente_amanda = Cliente("444.555.666-77", "Amanda Sousa", desconto_fidelidade=0.15)
-    cliente_liz = Cliente("555.666.777-88", "Liz Lacerda", desconto_fidelidade=0.00)
+    def listar_produtos(self):
+        print("\n--- CARDÁPIO DE PRODUTOS ---")
+        for p in self.produtos:
+            print(p.getInfo())
 
-    clientes = [cliente_kevin, cliente_joao, cliente_arthur, cliente_amanda, cliente_liz]
-    for c in clientes:
-        print(c.getIdentificacao())
+    def cadastrar_produto(self):
+        print("\n--- CADASTRO DE PRODUTO ---")
+        tipo = input("Tipo (1 - Bebida / 2 - Alimento): ").strip()
+        nome = input("Nome do produto: ").strip()
+        preco = float(input("Preço base (R$): "))
+        novo_id = len(self.produtos) + 1
 
-    pedido1 = Pedido(numero=101, cliente=cliente_kevin)
-    pedido1.adicionarItem(cafe, 2)
-    pedido1.adicionarItem(iced_latte, 1)
-    pedido1.adicionarItem(brownie_fit, 2)
+        if tipo == "1":
+            vol = int(input("Volume (ml): "))
+            gelada = input("É gelada? (s/n): ").strip().lower() == 's'
+            novo_prod = Bebida(novo_id, nome, preco, vol, gelada)
+        else:
+            gluten = input("Contém glúten? (s/n): ").strip().lower() == 's'
+            novo_prod = Alimento(novo_id, nome, preco, gluten)
 
-    pedido2 = Pedido(numero=102, cliente=cliente_liz)
-    pedido2.adicionarItem(iced_latte, 2)
-    pedido2.adicionarItem(croissant, 1)
+        self.produtos.append(novo_prod)
+        print(f"✅ Produto '{nome}' cadastrado com sucesso!")
 
-    pedido3 = Pedido(numero=103, cliente=cliente_joao)
-    pedido3.adicionarItem(cafe, 1)
-    pedido3.adicionarItem(croissant, 2)
+    def listar_clientes(self):
+        print("\n--- CLIENTES CADASTRADOS ---")
+        for c in self.clientes:
+            print(c.getIdentificacao())
 
-    driver_impressao = ImpressoraCupom()
-    pedido1.emitirRecibo(driver_impressao)
-    pedido2.emitirRecibo(driver_impressao)
-    pedido3.emitirRecibo(driver_impressao)
+    def cadastrar_cliente(self):
+        print("\n--- CADASTRO DE CLIENTE ---")
+        cpf = input("CPF: ").strip()
+        nome = input("Nome completo: ").strip()
+        desc = float(input("Desconto de fidelidade (ex: 0.10 para 10%): "))
+        novo_cliente = Cliente(cpf, nome, desc)
+        self.clientes.append(novo_cliente)
+        print(f"✅ Cliente '{nome}' cadastrado com sucesso!")
+
+    def criar_pedido(self):
+        print("\n--- NOVO PEDIDO ---")
+        self.contador_pedidos += 1
+        
+        # Selecionar cliente
+        print("Deseja vincular cliente?")
+        for i, c in enumerate(self.clientes):
+            print(f"[{i+1}] {c.getIdentificacao()}")
+        print("[0] Sem cliente (Consumidor Não Identificado)")
+        op_cliente = int(input("Opção: "))
+        
+        cliente_sel = self.clientes[op_cliente - 1] if op_cliente > 0 else None
+        novo_pedido = Pedido(self.contador_pedidos, cliente_sel)
+
+        # Adicionar itens
+        while True:
+            self.listar_produtos()
+            id_p = int(input("\nDigite o ID do produto para adicionar (ou 0 para finalizar pedido): "))
+            if id_p == 0:
+                break
+            prod_encontrado = next((p for p in self.produtos if p.id_prod == id_p), None)
+            if prod_encontrado:
+                qtd = int(input(f"Quantidade de '{prod_encontrado.nome}': "))
+                novo_pedido.adicionarItem(prod_encontrado, qtd)
+                print("Item adicionado!")
+            else:
+                print("Produto não encontrado.")
+
+        if novo_pedido.itens:
+            self.pedidos.append(novo_pedido)
+            print("\n✅ Pedido finalizado com sucesso!")
+            print(novo_pedido.visualizarResumo())
+        else:
+            print("Pedido cancelado por falta de itens.")
+
+    def listar_pedidos(self):
+        print("\n--- HISTÓRICO DE PEDIDOS ---")
+        if not self.pedidos:
+            print("Nenhum pedido realizado nesta sessão.")
+            return
+
+        for p in self.pedidos:
+            print("\n" + p.visualizarResumo())
+            imprimir = input("Deseja emitir o recibo impresso deste pedido? (s/n): ").strip().lower()
+            if imprimir == 's':
+                p.emitirRecibo(self.impressora)
+
+    def executar(self):
+        while True:
+            self.exibir_menu_principal()
+            opcao = input("Opção escolhida: ").strip()
+            if opcao == "1":
+                self.listar_produtos()
+            elif opcao == "2":
+                self.cadastrar_produto()
+            elif opcao == "3":
+                self.listar_clientes()
+            elif opcao == "4":
+                self.cadastrar_cliente()
+            elif opcao == "5":
+                self.criar_pedido()
+            elif opcao == "6":
+                self.listar_pedidos()
+            elif opcao == "0":
+                print("\nEncerrando o PixelCoffee. Até logo!")
+                break
+            else:
+                print("Opção inválida!")
 
 
 if __name__ == "__main__":
-    executar_testes()
+    app = PixelCoffeeApp()
+    app.executar()

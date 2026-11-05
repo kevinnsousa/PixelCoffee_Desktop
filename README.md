@@ -1,6 +1,12 @@
-# PixelCoffee - Desktop App I
+# PixelCoffee - Desktop App II
 
-Aplicação Desktop desenvolvida em Python demonstrando conceitos fundamentais de Programação Orientada a Objetos (POO).
+Aplicação Desktop desenvolvida em Python com menu interativo em console e modelagem em Programação Orientada a Objetos (POO).
+
+## 🚀 Funcionalidades do Menu Interativo (Desk App II)
+- **Gerenciamento de Produtos:** Listagem do cardápio e cadastro dinâmico de Bebidas e Alimentos.
+- **Gerenciamento de Clientes:** Cadastro e listagem de clientes com regras de desconto de fidelidade.
+- **Fluxo de Pedidos:** Criação de pedidos com seleção de itens, cálculo de totais e aplicação automática de descontos.
+- **Emissão de Recibo Fiscal:** Visualização do histórico e impressão simulada de cupom fiscal via dependência externa.
 
 ## 📐 Modelagem UML
 
